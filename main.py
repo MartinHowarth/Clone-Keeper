@@ -17,3 +17,4 @@ while 1:
             sys.exit()
         elif event.type == 1:
             pass
+print 1
