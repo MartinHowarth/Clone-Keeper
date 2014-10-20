@@ -1,0 +1,5 @@
+left:276
+right:275
+up:273
+down:274
+escape:27
