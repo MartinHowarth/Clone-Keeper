@@ -1,7 +1,7 @@
-class Globals:
+class Globals(object):
     def __init__(self):
-        self.x = 5
-        self.y = 5
+        self.x = 50
+        self.y = 50
 
     def left(self):
         self.x -= 1

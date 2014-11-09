@@ -1,7 +1,7 @@
 import pygame
 
 
-class Graphics:
+class Graphics(object):
     def __init__(self):
         self._screen_size = self._screen_width, self._screen_height = 640, 480
         self._fullscreen = False

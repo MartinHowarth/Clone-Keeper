@@ -1,7 +1,7 @@
 from pygame.locals import *
 
 
-class KeyBind:
+class KeyBind(object):
     """
     Maps a key to a function. Optionally passes in function_parameters as a dict of keyword: value pairs.
     """
@@ -45,10 +45,11 @@ class KeyBind:
                 self.function_down()
 
     def __repr__(self):
-        return 'Key:' + repr(self.key) + '\n\tUp Function:' + repr(self.function_up) + '\n\tDown Function:' + repr(self.function_down)
+        return 'Key:' + repr(self.key) + '\n\tUp Function:' + repr(self.function_up) + \
+               '\n\tDown Function:' + repr(self.function_down)
 
 
-class KeyMap:
+class KeyMap(object):
     """
     KeyBind container, KeyBinds are stored as lists for their respective letter in a dict.
     e.g. KEY_K: [KeyBind1, KeyBind2]
