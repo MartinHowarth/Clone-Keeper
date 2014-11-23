@@ -1,0 +1,19 @@
+Graphics:
+Each entity has sprite sheet:
+    one row for each state
+    variable length rows - would need to assign length in the .json for each obj
+    column = frame
+Entity is created without graphics, but with a graphics setting dict
+    post custom pygame event saying "please create graphics for me"
+    graphics handler picks up event, create graphics and assigns it to the obj
+    ...
+    state changes -> post state change graphics event
+    enters/leave drawable screen -> post enable/disable graphics event
+    -> graphics thread *only* draws a given list (w/ layers), no logic
+
+Each entity has .json that describes it - no hardcoded settings?
+    graphics dict within this:
+        spritesheet file name/location
+        possible graphical states, with row number and # of columns
+        frame dimensions - aim for standard size, but doesn't really matter - scale on load
+    AI?!?!
