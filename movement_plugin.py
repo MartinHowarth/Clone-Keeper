@@ -1,4 +1,5 @@
 from position_plugin import PluginPosition
+from plugin_plugin import Plugin
 from Vec2d import Vec2d
 
 GRAVITY = 9.81
@@ -8,9 +9,9 @@ class PluginMovement(PluginPosition):
     """
     For dumb movement that only does velocity
     """
-    def __init__(self, pos=(0.0, 0.0), velocity=(0.0, 0.0)):
-        super(PluginMovement, self).__init__(pos=pos)
+    def __init__(self, pos=(0.0, 0.0), velocity=(0.0, 0.0), init_dict=None):
         self._velocity = Vec2d(velocity[0], velocity[1])
+        super(PluginMovement, self).__init__(pos=pos, init_dict=init_dict)
 
     @property
     def vx(self):
@@ -41,16 +42,16 @@ class PluginMovement(PluginPosition):
         self.pos += self.velocity * dt
 
 
-class PluginForceSource(object):
-    def __init__(self, force=0.0, reative_force_coefficient=0.0, friction_coefficient=0.0):
+class PluginForceSource(Plugin):
+    def __init__(self, force=0.0, reative_momentum_coefficient=0.0, friction_coefficient=0.0, init_dict=None):
         """
         self.force = constant force. Example: conveyor belt, wind
-        self.reactive_force_coefficient = force multiplier.
-            force *= (1 - reactive force coefficient)
+        self.reactive_force_coefficient = momentum negative multiplier.
+            velocity *= (1 - reactive momentum coefficient)
             Example:
-                value = 1: object force is 0
-                value > 1: object force is negative (e.g. a simple spring)
-                value < 1: object force is damped
+                value = 1: object velocity is 0
+                value > 1: object velocity is (partially) inverted (e.g. a simple spring)
+                value < 1: object velocity is lowered
         self.friction_coefficient = slowing dependent on obj mass
             Friction only exists between the floor and the object, no wall friction
             velocity -= GRAVITY * obj_friction * friction * dt
@@ -59,8 +60,9 @@ class PluginForceSource(object):
                 friction < 0: object speeds up
         """
         self.force = force
-        self.reactive_force_coefficient = reative_force_coefficient
+        self.reactive_momentum_coefficient = reative_momentum_coefficient
         self.friction_coefficient = friction_coefficient
+        super(PluginForceSource, self).__init__(init_dict=init_dict)
 
 
 class PluginPhysics(PluginMovement):
@@ -73,12 +75,12 @@ class PluginPhysics(PluginMovement):
     Work in progress - need to think over how to handle force sources neatly
         specifically detecting when they apply to this object
     """
-    def __init__(self, pos=(0.0, 0.0), velocity=(0.0, 0.0), mass=1.0, friction_coefficient=1.0):
-        super(PluginPhysics, self).__init__(pos=pos, velocity=velocity)
+    def __init__(self, pos=(0.0, 0.0), velocity=(0.0, 0.0), mass=1.0, friction_coefficient=1.0, init_dict=None):
         self._force = Vec2d(0.0, 0.0)
         self.force_sources = set()  # set of objects, each is expected to have a .force and .reactive_force_coefficient
         self.friction_coefficient = friction_coefficient
         self.mass = mass
+        super(PluginPhysics, self).__init__(pos=pos, velocity=velocity, init_dict=init_dict)
 
     @property
     def fx(self):
@@ -104,23 +106,23 @@ class PluginPhysics(PluginMovement):
     def acceleration(self):
         return self._force / self.mass
 
-    def update_force(self):
+    def get_forces(self):
         sourced_friction = 0.0
         sourced_force = Vec2d(0.0, 0.0)
-        sourced_reactive_force = 0.0
+        sourced_reactive_momentum = 0.0
         for f in self.force_sources:
             sourced_friction += f.friction_coefficient
             sourced_force += f.force
-            sourced_reactive_force += f.reactive_force_coefficient
+            sourced_reactive_momentum += f.reactive_momentum_coefficient
 
         force = Vec2d(0.0, 0.0)
         force -= self.mass * GRAVITY * sourced_friction * self.friction_coefficient
         force += sourced_force
-        force *= (1 - sourced_reactive_force)
-        self._force[0] = force[0]
-        self._force[1] = force[1]
+
+        return force, sourced_reactive_momentum
 
     def update_time(self, dt):
-        self.update_force()
+        force, sourced_reactive_momentum = self.get_forces
         self.velocity += (self.force / self.mass) * dt
+        self.velocity *= (1 - sourced_reactive_momentum)
         super(PluginPhysics, self).update_time(dt)

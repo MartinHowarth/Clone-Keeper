@@ -1,8 +1,9 @@
 from Vec2d import Vec2d
+from plugin_plugin import Plugin
 
 
-class PluginPosition(object):
-    def __init__(self, pos=(0.0, 0.0)):
+class PluginPosition(Plugin):
+    def __init__(self, pos=(0.0, 0.0), init_dict=None):
         """
         x, y are 'world positions' (float)
         screen_x, screen_y are 'screen positions' (int) (i.e. where they will be drawn in the window)
@@ -12,6 +13,7 @@ class PluginPosition(object):
         self._pos = Vec2d(pos[0], pos[1])
         self._screen_pos = Vec2d(0, 0)
         self.is_screen_object = False
+        super(PluginPosition, self).__init__(init_dict=init_dict)
 
     @property
     def x(self):
@@ -35,8 +37,7 @@ class PluginPosition(object):
 
     @pos.setter
     def pos(self, value):
-        self._pos.x = value[0]
-        self._pos.y = value[1]
+        self._pos = value
         self.update_screen_position()
 
     @property
@@ -51,7 +52,6 @@ class PluginPosition(object):
         :return:
         """
         if self.is_screen_object:
-            self._screen_pos.x = int(self._pos.x)
-            self._screen_pos.y = int(self._pos.y)
+            self._screen_pos = int(self.pos)
         else:
             pass
