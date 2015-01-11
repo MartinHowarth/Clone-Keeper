@@ -2,7 +2,7 @@ import pygame
 import sys
 from pygame.locals import *
 import keyboard
-import globals
+import share
 import time
 import os
 import pickle
@@ -58,7 +58,7 @@ pygame.init()
 
 window = pygame.display.set_mode((640, 480))
 
-glob = globals.Globals()
+glob = share.Globals()
 
 to_save = []
 

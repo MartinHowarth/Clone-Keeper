@@ -17,3 +17,26 @@ Each entity has .json that describes it - no hardcoded settings?
         possible graphical states, with row number and # of columns
         frame dimensions - aim for standard size, but doesn't really matter - scale on load
     AI?!?!
+
+
+Inter-object chat:
+objects post to blogs depending on the service they provide
+    e.g. a logistic supplier blog
+Whenever something important happens to them, post a update to the relevant blog
+    e.g. logistic supplier changes location
+Other objects can subscribe to blogs to receive updates.
+    e.g. logistic requester wants to know where all the suppliers are (but don't go into detail of how much is available)
+This is best for small(?) numbers of objects posting infrequent updates.
+Probably not a good idea for large scale interactions (such as find closest ANYTHING)
+
+Logistic system:
+Copy of factorio's system, but with improved distribution to local storage centres
+Inherit from inventory
+    requester inventory
+    provider inventory (active/passive)
+    storage inventory (universal acceptor, active providers give all to closest available storage)
+    carrier inventory (necessary?)
+
+
+On startup:
+Create global_event_distributor and set in globals

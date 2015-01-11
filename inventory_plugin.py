@@ -91,10 +91,9 @@ class PluginItem(Plugin):
 
 
 class PluginInventory(Plugin):
-    def __init__(self, slot_count=6, init_dict=None):
+    def __init__(self, init_dict=None):
         self.inventory = []
         self._slot_count = 0
-        self.slot_count = slot_count
         super(PluginInventory, self).__init__(init_dict=init_dict)
 
     @property
