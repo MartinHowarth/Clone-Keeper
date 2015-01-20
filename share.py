@@ -1,4 +1,9 @@
 global_event_distributor = None
+item_ids = set()
+# suppliers is a dict of item_id: set([suppliers of item_id])
+suppliers = {}
+# distribution_centres is a list of all distribution centres
+distribution_centres = set()
 
 
 class Event(object):

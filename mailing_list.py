@@ -1,4 +1,5 @@
 import share
+import plugin_plugin
 
 
 class MailingList(object):
@@ -30,8 +31,9 @@ class MailingList(object):
 
 
 class MailListSubscriber(object):
-    def __init__(self):
+    def __init__(self, owner):
         self._subscribed_lists = {}
+        self.owner = owner
 
     @property
     def subscribed_lists(self):
@@ -53,8 +55,12 @@ class MailListSubscriber(object):
         else:
             print 'Cannot unsubscribe, not a member of %s list', list_identifier
 
+    def unsubscribe_from_all(self):
+        for l in self._subscribed_lists:
+            self.unsubscribe_from_list(l)
+
     def receive_mail(self, mail):
-        pass
+        self.owner.receive_mail(mail)
 
 
 def create_subscribe_request(subscriber, list_identifier):

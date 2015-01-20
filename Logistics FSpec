@@ -1,0 +1,47 @@
+Four main types:
+- suppliers
+- distributors / storage
+- requesters
+- carriers
+
+
+Suppliers somehow gain items (e.g. production building)
+When full they tell their closest distribution centre to perform an off-cycle pickup (e.g. if the DC is not picking up
+fast enough.
+They receive requests for items.
+    - This flags those items as "taken" but they still reside in the supplier (until picked up).
+        - The flags can be removed if the carrier (for whatever reason) isn't going to come
+            - Cancelled request
+            - The carrier gets killed
+
+They receive notification events about new DC's.
+    - subscribe to DC mailing list upon creation
+    - keep record of closest DC only
+    - Will NOT find a second closest DC if the first one is full (subject to revisement)
+
+
+Distribution centres:
+Periodically pulls from suppliers who have subscribed to this DC (i.e. the suppliers that are closer to this DC than
+any other DC)
+Limit storage of unrequested items to 75% of total space
+    - this prevents blockages
+    - when at 75% capacity:
+        - if a request is received, and the item is present, fulfil request and then request from supplier to refill
+        - item is not present, request from supplier and allow filling above 75% for this item.
+            - Try to keep 3x requests in stock (allowed to go above 75%)
+                - This is a cumulative thing, i.e. if multiple places ask for items, keep 3x total requested
+                - This cannot be requested by other DC's
+                - Ensure deleted suppliers release their requests
+
+
+Requesters: (e.g. manufacturing building)
+Requests up to given limit
+    - This could be simply 3x the required per-cycle resources
+    - Or it could be fill an arbitrary sized inventory
+        - This would be weighted in allocated size according to production-cycle resources
+        - However, production is a separate thing, and that will have to tell the requester what to get
+Given a certain request:
+    - Ask all suppliers on a closest-first basis and place request (partial requests possible) until satisfied
+        - stop asking once reach nearest DC
+    - Failing that, ask nearest DC for the item
+Subscribes to item_id mailing list when a request for that type of item is added

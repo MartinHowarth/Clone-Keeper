@@ -38,5 +38,8 @@ Inherit from inventory
     carrier inventory (necessary?)
 
 
-On startup:
-Create global_event_distributor and set in globals
+On load:
+make list of item ID's
+
+TODO:
+Add reserved item slots to inventory

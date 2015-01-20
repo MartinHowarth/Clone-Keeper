@@ -3,17 +3,17 @@ from plugin_plugin import Plugin
 
 class PluginItem(Plugin):
     def __init__(self, init_dict=None):
+        self.id = "default"
         self.stack_size = 1
         self.stack_max = 50
         self.name = "Default"
-        self.id = "default"
         self.health = 100
         super(PluginItem, self).__init__(init_dict=init_dict)
 
     def is_equivalent_item(self, other):
         if not hasattr(other, 'inherited_types'):
             return False
-        if not 'PluginItem' in other.inherited_types:
+        if 'PluginItem' not in other.inherited_types:
             return False
         if self.id != other.id:
             return False
@@ -188,3 +188,16 @@ class PluginInventory(Plugin):
                 success_flag = False
 
         return success_flag
+
+    def get_item_count(self, item_id):
+        """
+        Finds whether this inventory holds a given item, and if so returns the amount contained.
+        :param item_id:
+        :return:
+        int: number of specified item in this inventory
+        """
+        count = 0
+        for item in self.inventory:
+            if item.id == item_id:
+                count += item.stack_size
+        return count
