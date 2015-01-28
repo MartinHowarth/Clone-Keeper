@@ -39,7 +39,7 @@ class PluginMovement(PluginPosition):
         self._velocity.y = value[1]
 
     def update_time(self, dt):
-        self.pos += self.velocity * dt
+        self.coord += self.velocity * dt
 
 
 class PluginForceSource(Plugin):

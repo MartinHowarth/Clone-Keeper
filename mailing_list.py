@@ -31,7 +31,7 @@ class MailingList(object):
 
 
 class MailListSubscriber(object):
-    def __init__(self, owner):
+    def __init__(self, owner=None):
         self._subscribed_lists = {}
         self.owner = owner
 
@@ -60,7 +60,8 @@ class MailListSubscriber(object):
             self.unsubscribe_from_list(l)
 
     def receive_mail(self, mail):
-        self.owner.receive_mail(mail)
+        if self.owner is not None:
+            self.owner.receive_mail(mail)
 
 
 def create_subscribe_request(subscriber, list_identifier):

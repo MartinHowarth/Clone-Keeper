@@ -1,9 +1,9 @@
 global_event_distributor = None
 item_ids = set()
+
+logistics = None
 # suppliers is a dict of item_id: set([suppliers of item_id])
-suppliers = {}
 # distribution_centres is a list of all distribution centres
-distribution_centres = set()
 
 
 class Event(object):
@@ -24,3 +24,6 @@ def receive_event(event):
     print event, global_event_distributor
     if global_event_distributor is not None:
         global_event_distributor.receive_event(event)
+
+
+

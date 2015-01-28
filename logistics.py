@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 
 class LogisticRequester(inventory_plugin.PluginInventory):
-    def __init__(self, init_dict=None, position=None):
+    def __init__(self, init_dict=None):
         super(LogisticRequester, self).__init__(init_dict=init_dict)
         self.mail_subscriber = mailing_list.MailListSubscriber(self)
 
@@ -15,7 +15,7 @@ class LogisticRequester(inventory_plugin.PluginInventory):
         self._list_of_suppliers = {}
         # _list_of_suppliers:
         # {item_id: OrderedDict([(supplier, distance), ...])}
-        self._position = position
+        self._position = movement_plugin.PluginPosition()
 
         self.distribution_centre = None
         self._distribution_centre_distance = float('inf')
@@ -23,11 +23,11 @@ class LogisticRequester(inventory_plugin.PluginInventory):
 
     @property
     def position(self):
-        return self._position
+        return self._position.coord
 
     @position.setter
     def position(self, value):  # when this requester moves, update ranking of suppliers
-        self._position = value
+        self._position.coord = value
 
         self._find_closest_distribution_centre()
 
@@ -39,8 +39,8 @@ class LogisticRequester(inventory_plugin.PluginInventory):
 
     def _update_supplier(self, item_id, supplier):
         sup_pos = supplier.position
-        self_pos = self.position
-        distance = sup_pos**2 + self_pos**2
+        self_pos = self._position
+        distance = self_pos.get_distance_from_squared(sup_pos)
         if distance < self._distribution_centre_distance:
             self._list_of_suppliers[item_id][supplier] = distance
 
@@ -49,18 +49,10 @@ class LogisticRequester(inventory_plugin.PluginInventory):
                                                               key=lambda t: t[1]))
 
     def _find_closest_distribution_centre(self):
-        min_dist = float('inf')
-        result = None
-        for dc in share.distribution_centres:
-            dist = self.position**2 + dc.position**2
-            if dist < min_dist:
-                result = dc
-                min_dist = dist
-        self.distribution_centre = result
-        self._distribution_centre_distance = min_dist
+        self.distribution_centre, self._distribution_centre_distance = find_closest_distribution_centre(self._position)
 
     def _refresh_all_suppliers(self):
-        for item_id, suppliers in share.suppliers:
+        for item_id, suppliers in share.logistics.suppliers:
             for sup in suppliers:
                 self._update_supplier(item_id, sup)
 
@@ -90,7 +82,7 @@ class LogisticRequester(inventory_plugin.PluginInventory):
                 self._list_of_suppliers[item_id][supplier] = None
 
     def add_new_request(self, item_id, amount):
-        if item_id not in share.item_ids:
+        if item_id not in share.logistics.item_ids:
             raise Exception("This item ID does not exist.")
         self._requested_items[item_id] = amount
 
@@ -129,12 +121,12 @@ class LogisticRequester(inventory_plugin.PluginInventory):
 
 class LogisticDistributionCentre(inventory_plugin.PluginInventory):
     def __init__(self, init_dict=None):
-        share.distribution_centres.add(self)
+        share.logistics.distribution_centres.add(self)
         super(LogisticDistributionCentre, self).__init__(init_dict=init_dict)
         self.mail_subscriber = mailing_list.MailListSubscriber(self)
 
     def receive_mail(self, mail):
-        self.mail_subscriber.receive_mail(mail)
+        pass
 
 
 class LogisticSupplier(inventory_plugin.PluginInventory):
@@ -142,12 +134,80 @@ class LogisticSupplier(inventory_plugin.PluginInventory):
         super(LogisticSupplier, self).__init__(init_dict=init_dict)
         self.mail_subscriber = mailing_list.MailListSubscriber(self)
 
+        self._position = movement_plugin.PluginPosition()
+
+    @property
+    def position(self):
+        return self._position.coord
+
+    @position.setter
+    def position(self, value):
+        self._position.coord = value
+
     def receive_mail(self, mail):
-        self.mail_subscriber.receive_mail(mail)
+        pass
 
     def receive_item(self, item):
         super(LogisticSupplier, self).receive_item(item)
-        share.suppliers[item.id].add(self)
+        share.logistics.suppliers[item.id].add(self)
+
+    def _find_closest_distribution_centre(self):
+        self.distribution_centre, self._distribution_centre_distance = find_closest_distribution_centre(self._position)
+
+
+class LogisticCarrierCoordinator(object):
+    def __init__(self):
+        self._to_deliver = {}  # dict of int: delivery pairs. int is delivery ID
+
+    def new_delivery(self, origin, destination, item_id, count):
+        delivery_dict = {
+            'origin': origin,
+            'destination': destination,
+            'item_id': item_id,
+            'count': count
+        }
+
+        i = 0
+        while True:
+            if i not in self._to_deliver.keys():
+                break
+            else:
+                i += 1
+
+        self._to_deliver[i] = delivery_dict
+
+        return i
+
+    def cancel_delivery(self, i):
+        if i in self._to_deliver.keys():
+            self._to_deliver[i]['origin'].cancel_delivery(i)
+            self._to_deliver[i]['destination'].cancel_delivery(i)
+            # TODO recall carrier
+            del self._to_deliver[i]
+
+    def update_deliveries(self):
+        for i, delivery in self._to_deliver.items():
+            delivery['origin'].give_item()
+
+
+
+
+class _LogisticShare(object):
+    def __init__(self):
+        self.suppliers = {}
+        self.distribution_centres = set()
+        self.carrier_coordinator = LogisticCarrierCoordinator()
+
+
+def find_closest_distribution_centre(position):
+        min_dist = float('inf')
+        result = None
+        for dc in share.logistics.distribution_centres:
+            dist = position.get_distance_from_squared(dc.position)
+            if dist < min_dist:
+                result = dc
+                min_dist = dist
+        return result, min_dist
 
 
 def create_supplier_update(supplier, item_id):
@@ -158,3 +218,7 @@ def create_supplier_update(supplier, item_id):
     }
     event = share.Event(data=data, event_type='mail')
     return event
+
+
+if __name__ == "__main__":
+    share.logistics = _LogisticShare()

@@ -87,7 +87,7 @@ while 1:
         elif event.type == MOUSEMOTION:
             pass
         elif event.type == MOUSEBUTTONDOWN:
-            add_grass(grid, event.pos)
+            add_grass(grid, event.coord)
 
         elif event.type == KEYDOWN or event.type == KEYUP:
             keyb.receive_event(event)
